@@ -31,7 +31,12 @@ jobs:
         run: |
           for attempt in 1 2 3 4 5 6; do
             count=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts" --jq "[.artifacts[] | select(.name == \"$ARTIFACT_NAME\" and .expired == false)] | length")
-            if [ "$count" = "1" ]; then exit 0; fi
+            if [ "$count" = "1" ]; then
+              # The deploy action reads a separate artifact-service index.
+              # REST visibility can precede that index becoming available.
+              sleep 20
+              exit 0
+            fi
             sleep 5
           done
           echo "Artifact metadata did not become available."
